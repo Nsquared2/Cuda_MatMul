@@ -127,18 +127,22 @@ int main(){
 	for(int i=1; i<NUM_ARRAYS+1; i++){
 		struct Matrix A, B;
 		//Initialize Array
-		A.height = i*100;
-		A.width = i*75;
+		A.height = i*5000;
+		A.width = i*3500;
 		A.data = (float*)malloc(A.width * A.height * sizeof(float));
 		InitMatrix(A);
-		B.height = i*75;
-		B.width = i*125;
+		B.height = i*3500;
+		B.width = i*7500;
 		B.data = (float*)malloc(B.width * B.height * sizeof(float));
 		InitMatrix(B);
 
 		//Get Matrix Product of Array
 		printf("********Entering Matrix Mul*****\n");
+		clock_t start = clock();
 		struct Matrix C = MatMul(A, B);	
+		clock_t time = clock() - start;
+		float sec = (float)time/(float)CLOCKS_PER_SEC;
+		printf("Time %d: %f\n", i, sec);
 		free(A.data);
 		free(B.data);
 		free(C.data);
