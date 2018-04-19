@@ -32,13 +32,13 @@ __global__ void MatMul_k(const struct Matrix A, const struct Matrix B, Matrix C)
 	//Block determines which submatrix of C we work on
 	//Create sub matrix of C to calculate with shared memory
 	struct Matrix C_sub;
-	C_sub.width = BLOCK_DIM; 
-	C_sub.height = BLOCK_DIM;
+	C_sub.width = BLOCK_SIZE;
+	C_sub.height = BLOCK_SIZE;
 
 	//int C_stride = C.width;
 	int C_y = C.width * BLOCK_SIZE * blockIdx.y;
 	int C_x = BLOCK_SIZE * blockIdx.x;
-	C_sub.data = &C.data[C_y + C_x]
+	C_sub.data = &C.data[C_y + C_x];
 
 	//Thread determines where in C block we are
 	float C_val = 0.0;
@@ -46,7 +46,7 @@ __global__ void MatMul_k(const struct Matrix A, const struct Matrix B, Matrix C)
 	int y = threadIdx.x;	
 
 	//loop over A and B submatrices to compute C submatrix
-	for(int s = 0; s < (A.width / BLOCK_SIZE); m++){
+	for(int m = 0; m < (A.width / BLOCK_SIZE); m++){
 		struct Matrix A_sub;
 		A_sub.width = BLOCK_SIZE;
 		A_sub.height = BLOCK_SIZE;
@@ -71,19 +71,19 @@ __global__ void MatMul_k(const struct Matrix A, const struct Matrix B, Matrix C)
 		Bs[y][x] = B_sub.data[B.width * y + x];
 
 		//make sure all memory is loaded
-		__syncthread();
+		__syncthreads();
 
 		//Compute Asub and Bsub product to accumulate Csub element
 		for(int c = 0; c < BLOCK_SIZE; c++){
-			C_val += As[y][c] * Bs[c][col];
+			C_val += As[y][c] * Bs[c][x];
 		}	
 
 		//wait for computation to finish before loading new memory
-		__syncthread();	
+		__syncthreads();	
 	}	
 	
 	//write C sub element, again note parent width
-	C_sub.data[C.width * y + col] = C_val;
+	C_sub.data[C.width * y + x] = C_val;
 }
 
 Matrix MatMul(const Matrix A, const Matrix B){
